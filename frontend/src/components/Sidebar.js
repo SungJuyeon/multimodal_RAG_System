@@ -1,13 +1,13 @@
 import React from 'react';
 import { Plus, MessageSquare } from 'lucide-react';
 
-function Sidebar({ onNewCon, conversations, activeConvId, onSelectConv }) {
+function Sidebar({ onNewConv, conversations, activeConvId, onSelectConv }) {
     return (
         <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
             {/* 새 페이지 버튼 */}
             <div className='p-4 border-b border-slate-200'>
                 <button
-                    onClick = {onNewCon}
+                    onClick = {onNewConv}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all"
                 >
                     <Plus className="h-5 w-5" />

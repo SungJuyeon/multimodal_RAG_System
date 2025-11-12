@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
-
+import ChatArea from './components/ChatArea';
+import FilePanel from './components/FilePanel';
 
 function App() {
 
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
+  const [conversations, setConversations] = useState([ ]);
+
+  const [activeConvId, setActiveConvId] = useState(1);
+  const activeConversation = conversations.find(c => c.id === activeConvId);
+
+  const createNewConversation = () => {
+    const newConv = {
+      id: Date.now(),
       title: '새 대화',
       files: [],
       messages: [],
       lastActivity: '방금 전'
-    }
-  ]);
-
-  const [activeConvId, setActiveConvId] = useState(1);
+    };
+    setConversations(prev => [newConv, ...prev]);
+    setActiveConvId(newConv.id);
+  };
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -23,7 +29,12 @@ function App() {
         conversations={conversations}
         activeConvId={activeConvId}
         onSelectConv={setActiveConvId}
-        onNewConv={() => {/* 새 대화 생성 로직 */}}
+        onNewConv={createNewConversation}
+      />
+
+      <ChatArea 
+        conversation={activeConversation}
+        onNewConv={createNewConversation}
       />
     </div>
   );
