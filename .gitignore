@@ -427,3 +427,12 @@ multimodal_RAG/figures/*
 document_parsing_pymupdf/images/*
 document_parsing_unstructured/unstructured_output/*
 document_parsing_pymupdf/신세계.txt
+input/책.pdf
+input/테스트.pdf
+*.jpg
+*.jpeg
+*.png
+*.bin
+*.mp4
+*.wav
+*.sqlite3
