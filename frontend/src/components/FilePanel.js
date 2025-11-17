@@ -1,12 +1,39 @@
 import React, { useState } from 'react';
 import { Upload, FileText, Video, CheckCircle, XCircle, Loader2, Database } from 'lucide-react';
+import { uploadFile } from '../services/api';
 
 function FilePanel({ conversation, onFileUpload, onRemoveFile, onCreateRAG }) {
     const [ragStatus, setRagStatus] = useState('idle'); // 'idle' | 'loading' | 'done'
+    const [uploadingFiles, setUploadingFiles] = useState(new Set());
 
-    const handleFileChange = (e, type) => {
+    const handleFileChange = async (e, type) => {
         const files = Array.from(e.target.files);
-        onFileUpload(files, type);
+        
+        for (const file of files) {
+            const fileId = `${Date.now()}_${file.name}`;
+            setUploadingFiles(prev => new Set(prev).add(fileId));
+
+            try {
+                // 백엔드에 파일 업로드
+                const response = await uploadFile(conversation.id, file);
+                
+                // 프론트엔드 상태 업데이트
+                onFileUpload([{
+                    ...response.file,
+                    id: fileId,
+                    type: type
+                }], type);
+            } catch (error) {
+                console.error('파일 업로드 실패:', error);
+                alert(`파일 업로드 실패: ${file.name}`);
+            } finally {
+                setUploadingFiles(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(fileId);
+                    return newSet;
+                });
+            }
+        }
     };
 
     const getFileIcon = (type) => {
@@ -19,8 +46,14 @@ function FilePanel({ conversation, onFileUpload, onRemoveFile, onCreateRAG }) {
 
     const handleCreateRAG = async () => {
         setRagStatus('loading');
-        await onCreateRAG(conversation.files); // 백엔드 vector 생성
-        setTimeout(() => setRagStatus('done'), 800); // 시각적 효과용
+        try {
+            await onCreateRAG(conversation.id);
+            setRagStatus('done');
+        } catch (error) {
+            console.error('RAG 생성 실패:', error);
+            alert('RAG 시스템 생성에 실패했습니다.');
+            setRagStatus('idle');
+        }
     };
 
     if (!conversation) return null;
@@ -102,10 +135,10 @@ function FilePanel({ conversation, onFileUpload, onRemoveFile, onCreateRAG }) {
                     </div>
                     <div className="text-xs text-slate-500">{file.size} MB</div>
                     </div>
-                    {file.status === 'uploading' && (
+                    {uploadingFiles.has(file.id) && (
                     <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
                     )}
-                    {file.status === 'completed' && (
+                    {file.status === 'completed' && !uploadingFiles.has(file.id) && (
                     <div className="flex items-center gap-2">
                         <CheckCircle className="w-5 h-5 text-green-500" />
                         <button
@@ -122,22 +155,29 @@ function FilePanel({ conversation, onFileUpload, onRemoveFile, onCreateRAG }) {
             </div>
         )}
         {/* RAG 생성 버튼 */}
-        {conversation.files.length > 0 && (
+        {conversation.files.length > 0 && ragStatus !== 'done' && (
             <div className="p-6 border-t border-slate-200">
             <button
                 disabled={ragStatus === 'loading'}
                 onClick={handleCreateRAG}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
-                ragStatus === 'done'
-                    ? 'bg-sky-500 text-white'
+                ragStatus === 'loading'
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white hover:shadow-lg hover:scale-105'
                 }`}
             >
                 {ragStatus === 'loading' && <Loader2 className="w-5 h-5 animate-spin" />}
-                {ragStatus === 'done' && <CheckCircle className="w-5 h-5" />}
                 {ragStatus === 'idle' && <Database className="w-5 h-5" />}
-                {ragStatus === 'done' ? 'RAG 시스템 생성 완료' : ragStatus === 'loading' ? 'RAG 생성 중...' : 'RAG 시스템 만들기'}
+                {ragStatus === 'loading' ? 'RAG 생성 중...' : 'RAG 시스템 만들기'}
             </button>
+            </div>
+        )}
+        {ragStatus === 'done' && (
+            <div className="p-6 border-t border-slate-200">
+            <div className="flex items-center justify-center gap-2 px-4 py-3 bg-sky-100 rounded-xl">
+                <CheckCircle className="w-5 h-5 text-sky-600" />
+                <span className="font-medium text-sky-700">RAG 시스템 준비 완료</span>
+            </div>
             </div>
         )}
         </div>
