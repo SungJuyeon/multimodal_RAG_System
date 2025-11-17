@@ -436,3 +436,7 @@ input/테스트.pdf
 *.mp4
 *.wav
 *.sqlite3
+test_RAG/OutdoorClothingCatalog_1000.csv
+test_RAG/.DS_Store
+backend/.DS_Store
+.DS_Store
