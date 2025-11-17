@@ -1,0 +1,39 @@
+# FastAPI 관련
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+pydantic==2.5.3
+
+# Protobuf
+protobuf==4.25.3
+
+# LangChain 및 OpenAI
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-openai==0.1.7
+langchain-core==0.1.52
+langchain-chroma==0.1.1
+openai==1.30.1
+
+# 벡터 DB
+chromadb==0.4.22
+
+# PDF 처리
+unstructured==0.12.0
+pdf2image==1.17.0
+pdfminer.six==20231228
+pytesseract==0.3.10
+
+# 영상 처리
+opencv-python==4.9.0.80
+moviepy==1.0.3
+
+# 이미지 처리 및 임베딩
+Pillow==10.2.0
+torch==2.1.2
+torchvision==0.16.2
+transformers==4.36.2
+
+# 유틸리티
+python-dotenv==1.0.0
+numpy==1.26.3
