@@ -1,13 +1,33 @@
-import React, { useState } from "react";
-import { MessageSquare, Plus, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MessageSquare, Plus, Loader2, Film } from "lucide-react";
 import Message from "./Message";
+import { sendQuery } from "../services/api";
 
 function ChatArea({ conversation, onNewConv, onSendMessage }) {
   const [inputValue, setInputValue] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    if (!conversation) return [];
+    const saved = localStorage.getItem(`messages_${conversation.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  const handleSend = () => {
+  useEffect(() => {
+    if (conversation) {
+      const saved = localStorage.getItem(`messages_${conversation.id}`);
+      setMessages(saved ? JSON.parse(saved) : []);
+    } else {
+      setMessages([]);
+    }
+  }, [conversation?.id]);
+
+  useEffect(() => {
+    if (conversation) {
+      localStorage.setItem(`messages_${conversation.id}`, JSON.stringify(messages));
+    }
+  }, [messages, conversation?.id]);
+
+  const handleSend = async () => {
     if (!inputValue.trim() || !conversation) return;
 
     const userMsg = {
@@ -18,23 +38,41 @@ function ChatArea({ conversation, onNewConv, onSendMessage }) {
     };
 
     setMessages((prev) => [...prev, userMsg]);
+    const query = inputValue;
     setInputValue("");
     setIsQuerying(true);
 
-    // mock AI 답변
-    setTimeout(() => {
+    try {
+      const response = await sendQuery(conversation.id, query);
+      
+      console.log('서버 응답:', response);
+      
       const aiMsg = {
         id: Date.now() + 1,
         type: "ai",
-        content: "이건 mock AI 답변입니다.",
+        content: response.answer || "답변을 생성하지 못했습니다.",
         timestamp: new Date().toLocaleTimeString(),
-        videoSources: [
-          { time: "00:01:23", text: "참고 영상 구간" },
-        ],
+        videoSources: response.video_sources || response.sources || [],
+        images: response.images || [],
       };
+      
       setMessages((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      console.error('질의 처리 실패:', error);
+      
+      const errorMsg = {
+        id: Date.now() + 1,
+        type: "ai",
+        content: "죄송합니다. 답변 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        timestamp: new Date().toLocaleTimeString(),
+        videoSources: [],
+        images: [],
+      };
+      
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsQuerying(false);
-    }, 1000);
+    }
   };
 
   if (!conversation) {
@@ -73,17 +111,45 @@ function ChatArea({ conversation, onNewConv, onSendMessage }) {
                 <MessageSquare className="w-12 h-12 text-slate-400" />
               </div>
               <h3 className="text-2xl font-bold text-slate-800 mb-3">
-                파일을 업로드하여<br />
-                질의응답을 시작하세요
+                {conversation.ragReady 
+                  ? "질문을 입력하세요" 
+                  : "파일을 업로드하고\nRAG 시스템을 만들어주세요"}
               </h3>
             </div>
           </div>
         )}
 
         {messages.map((msg) => (
-          <Message key={msg.id} message={msg} />
+          <div key={msg.id}>
+            {/* 메시지 */}
+            <Message message={msg} />
+            
+            {/* 영상 타임라인 */}
+            {msg.type === 'ai' && msg.videoSources && msg.videoSources.length > 0 && (
+              <div className="mt-2 mb-4">
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200 max-w-[70%]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Film className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm font-semibold text-slate-800">영상 출처</span>
+                  </div>
+                  <div className="space-y-2">
+                    {msg.videoSources.map((source, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-white/80 p-3 rounded-lg hover:bg-white transition-colors">
+                        <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0 shadow-sm">
+                          {source.time}
+                        </div>
+                        <div className="text-xs text-slate-700 flex-1 leading-relaxed">
+                          {source.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
-
+        
         {isQuerying && (
           <div className="flex justify-start">
             <div className="bg-slate-100 rounded-2xl px-5 py-3">
@@ -105,9 +171,11 @@ function ChatArea({ conversation, onNewConv, onSendMessage }) {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
             placeholder={
-              conversation.files.length === 0 ? "먼저 파일을 업로드해주세요" : ""
+              !conversation.ragReady 
+                ? "먼저 RAG 시스템을 만들어주세요" 
+                : "질문을 입력하세요..."
             }
-            disabled={conversation.files.length === 0}
+            disabled={!conversation.ragReady}
             className="flex-1 px-6 py-4 border-2 border-slate-200 rounded-full focus:outline-none focus:border-orange-400 disabled:bg-slate-50 disabled:text-slate-400 transition-all text-slate-700"
           />
           <button
