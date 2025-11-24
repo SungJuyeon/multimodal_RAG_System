@@ -53,7 +53,7 @@ def process_document(pdf_path: str, conv_id: str):
     
     # 1. PDF 추출
     print("  → PDF 파싱 중...")
-    raw_elements, figure_path = extract_pdf_elements(fpath, fname)
+    raw_elements, figure_path = extract_pdf_elements(fpath, fname, conv_id)
     texts, tables, image_count = categorize_elements(raw_elements, figure_path)
     print(f"  → 추출 완료: {len(texts)} 텍스트, {len(tables)} 테이블, {image_count} 이미지")
     
@@ -70,7 +70,7 @@ def process_document(pdf_path: str, conv_id: str):
     
     # 4. 이미지 처리
     print(f"  → 이미지 폴더 확인: {figure_path}")
-    img_base64_list, image_summaries = generate_clip_embeddings(figure_path)
+    images_base64, image_summaries = generate_clip_embeddings(figure_path)
     
     # 5. 벡터 저장소 생성
     print("  → 벡터 DB 생성 중...")
@@ -84,7 +84,7 @@ def process_document(pdf_path: str, conv_id: str):
         table_summaries,
         tables,
         image_summaries,
-        img_base64_list
+        images_base64
     )
     
     _retrievers[f"doc_{conv_id}"] = retriever
@@ -92,7 +92,7 @@ def process_document(pdf_path: str, conv_id: str):
     result = {
         "texts_count": len(texts_4k_token),
         "tables_count": len(tables),
-        "images_count": len(img_base64_list),
+        "images_count": len(images_base64),
         "collection_name": collection_name,
         "image_folder": figure_path
     }
