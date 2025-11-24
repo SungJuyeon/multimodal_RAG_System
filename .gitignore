@@ -416,3 +416,27 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# virtual environments
+/woo/*
+
+# figures
+multimodal_RAG_ipynb/figures/*
+multimodal_RAG_ipynb/test_figure/*
+multimodal_RAG/figures/*
+document_parsing_pymupdf/images/*
+document_parsing_unstructured/unstructured_output/*
+document_parsing_pymupdf/신세계.txt
+input/책.pdf
+input/테스트.pdf
+*.jpg
+*.jpeg
+*.png
+*.bin
+*.mp4
+*.wav
+*.sqlite3
+test_RAG/OutdoorClothingCatalog_1000.csv
+test_RAG/.DS_Store
+backend/.DS_Store
+.DS_Store
