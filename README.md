@@ -5,7 +5,7 @@ PDF · Image · Video 기반의 멀티모달 RAG 시스템 <br>
   <img src="https://img.shields.io/badge/Backend-Python-00000F?style=flat-square"/>
   <img src="https://img.shields.io/badge/Frontend-React-61DAFB?style=flat-square"/>
   <img src="https://img.shields.io/badge/Styling-TailwindCSS-38bdf8?style=flat-square"/>
-  <img src="https://img.shields.io/badge/VectorDB-FAISS-005571?style=flat-square"/>
+  <img src="https://img.shields.io/badge/VectorDB-Chroma-005571?style=flat-square"/>
   <img src="https://img.shields.io/badge/Deployed-Docker-0db7ed?style=flat-square"/>
 </p>
 
