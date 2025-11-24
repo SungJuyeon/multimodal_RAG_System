@@ -1,11 +1,14 @@
 import os
+import shutil
 from unstructured.partition.pdf import partition_pdf
 from langchain_text_splitters import CharacterTextSplitter
 
-def extract_pdf_elements(path, fname):
-    current_file_dir = os.path.dirname(os.path.abspath(__file__))
-    backend_dir = current_file_dir  # 현재 디렉토리가 backend
-    figure_path = os.path.join(backend_dir, "figures")
+# 전역 retriever 저장소
+_retrievers = {}
+
+def extract_pdf_elements(path, fname, conv_id):
+    # 모든 이미지를 ./figures 폴더에 저장
+    figure_path = os.path.abspath("./figures")
     os.makedirs(figure_path, exist_ok=True)
     print(f"📍 이미지 저장 경로: {figure_path}")
 
@@ -17,10 +20,22 @@ def extract_pdf_elements(path, fname):
         max_characters=4000,
         new_after_n_chars=3800,
         combine_text_under_n_chars=2000,
-        image_output_dir_path=figure_path, 
-        extract_image_block_types=["Image", "Table"],  # 이미지 타입 명시
-        extract_image_block_to_payload=False,  # 파일로 저장
+        image_output_dir_path=figure_path,
+        extract_image_block_types=["Image"],
+        extract_image_block_to_payload=False,
     )
+    # 추출된 이미지 파일 이름에 conv_id 붙이기
+    image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
+    for f in os.listdir(figure_path):
+        if f.lower().endswith(image_extensions):
+            old_path = os.path.join(figure_path, f)
+            new_name = f"{conv_id}_{f}"
+            new_path = os.path.join(figure_path, new_name)
+            # 이름이 이미 conv_id로 시작하지 않으면 변경
+            if not f.startswith(f"{conv_id}_"):
+                shutil.move(old_path, new_path)
+                print(f"  → 이미지 이름 변경: {f} → {new_name}")
+
     return raw_elements, figure_path
 
 def categorize_elements(raw_elements, figure_path=None):
