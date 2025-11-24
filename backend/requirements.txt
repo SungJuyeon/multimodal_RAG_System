@@ -20,3 +20,5 @@ pdfminer.six==20231228
 opencv-python-headless>=4.8.1
 pillow-heif==0.15.0
 python-multipart==0.0.20
+chromadb==0.4.22
+hnswlib==0.8.0
