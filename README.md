@@ -44,6 +44,44 @@ PDF/Image/Video → 임베딩 → 벡터DB → 검색 → LLM 응답까지 전�
 	•	로컬 및 서버 환경 통일<br>
 <br>
 
+## Data Pipeline (PDF & Video)
+
+```mermaid
+graph TD
+    subgraph "Input Sources"
+        PDF[PDF 문서]
+        Video[비디오 파일]
+    end
+
+    subgraph "Preprocessing Engine"
+        PDF -->|Unstructured| Text[텍스트 분리]
+        PDF -->|Unstructured| Table[표 추출]
+        PDF -->|Unstructured| Img[이미지 추출]
+        
+        Video -->|OpenCV| Frame[Key Frame 추출]
+        Video -->|FFmpeg| Audio[오디오 추출]
+    end
+
+    subgraph "Understanding & Embedding"
+        Text -->|GPT-4o| TextSum[텍스트 요약]
+        Table -->|GPT-4o| TableSum[표 요약]
+        Img -->|CLIP + GPT-4o| ImgDesc[이미지 분석]
+        
+        Frame & Audio -->|GPT-4o| VideoSum[영상 구간 분석]
+    end
+
+    subgraph "Vector Store (ChromaDB)"
+        TextSum --> VectorDB
+        TableSum --> VectorDB
+        ImgDesc --> VectorDB
+        VideoSum --> VectorDB
+    end
+
+    VectorDB -->|Retrieval| LLM[Generate Answer]
+```
+
+
+
 ## 시연
 
 **•	PDF 업로드**
